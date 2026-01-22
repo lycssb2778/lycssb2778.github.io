@@ -2,8 +2,9 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>pornhub少羽版</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pornhu少羽版</title>
+    <link rel="icon" href="https://lycssb2778.github.io/icon.png" type="image/png">
     <style>
         :root {
             --bg: #1a1a1a;
@@ -34,10 +35,12 @@
         .header h1 {
             font-size: 28px;
             margin: 0 0 10px;
+            min-height: 40px;
         }
         .header .subtitle {
             font-size: 16px;
             color: var(--sub);
+            min-height: 30px;
         }
         .content {
             padding: 30px;
@@ -46,20 +49,29 @@
             width: 100%;
             border-radius: 10px;
             margin-bottom: 25px;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .hero.loaded {
+            opacity: 1;
         }
         .person {
             width: 180px;
             border-radius: 10px;
-            margin: 0 auto 20px;
+            margin: 20px auto;
             display: block;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
         }
-        .meta, .highlight, .section, .quote-box {
-            margin-bottom: 25px;
+        .person.loaded {
+            opacity: 1;
         }
         .meta {
             text-align: center;
             color: var(--sub);
             font-size: 14px;
+            min-height: 25px;
+            margin-bottom: 20px;
         }
         .highlight {
             background: linear-gradient(135deg, var(--accent) 0%, #764ba2 100%);
@@ -68,16 +80,23 @@
             border-radius: 10px;
             text-align: center;
             font-size: 18px;
+            min-height: 60px;
+            margin-bottom: 25px;
+        }
+        .section {
+            margin-bottom: 25px;
         }
         .section h2 {
             border-left: 4px solid var(--accent);
             padding-left: 15px;
             margin-bottom: 15px;
             font-size: 22px;
+            min-height: 35px;
         }
         .section p {
             text-indent: 2em;
             margin-bottom: 15px;
+            min-height: 30px;
         }
         .quote-box {
             background: #3a3a3a;
@@ -86,6 +105,8 @@
             border-radius: 10px;
             font-style: italic;
             text-align: center;
+            min-height: 80px;
+            margin-bottom: 25px;
         }
         .footer {
             background: var(--bg);
@@ -95,30 +116,43 @@
             font-size: 14px;
             border-top: 2px solid #444;
         }
+        .error {
+            background: rgba(255,107,107,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            color: #ffb8b8;
+            border-left: 4px solid #ff6b6b;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1 id="title"></h1>
-            <div class="subtitle" id="sub"></div>
+            <h1 id="title">加载中...</h1>
+            <div class="subtitle" id="sub">加载中...</div>
         </div>
 
         <div class="content">
-            <img src="img.png" alt="666少羽版" class="hero">
-            <div class="meta" id="meta"></div>
-            <div class="highlight" id="highlight"></div>
+            <img id="hero-img" src="" alt="666少羽版" class="hero">
+            <div class="meta" id="meta">加载中...</div>
+            <div class="highlight" id="highlight">加载中...</div>
+
+            <!-- 第一段内容 -->
+            <div class="section" id="sec1">
+                <h2 id="sec1-title">加载中...</h2>
+                <p id="sec1-content">加载中...</p>
+            </div>
 
             <!-- 本人照插在第二段文字上方 -->
-            <div class="section" id="sec1">
-                <img src="person.png" alt="少羽" class="person">
+            <div class="section" id="sec2">
+                <h2 id="sec2-title">加载中...</h2>
+                <img id="person-img" src="" alt="少羽" class="person">
+                <p id="sec2-content">加载中...</p>
             </div>
-            <div class="section" id="sec2"></div>
 
-            <div class="quote-box" id="quote"></div>
+            <div class="quote-box" id="quote">加载中...</div>
 
-            <div class="section" id="sec3"></div>
-            <div class="highlight" id="end"></div>
+            <div class="highlight" id="end">加载中...</div>
         </div>
 
         <div class="footer">
@@ -128,14 +162,337 @@
     </div>
 
     <script>
-        // 顺序读取同目录 01-08 txt
-        const list = ['title','sub','meta','highlight','sec1','sec2','quote','sec3','end'];
-        list.forEach((id, i) => {
-            const file = String(i+1).padStart(2,'0')+'_'+id+'.txt';
-            fetch(file)
-                .then(r => r.text())
-                .then(t => document.getElementById(id).innerHTML += t.replace(/\n/g,'<br>'))
-                .catch(() => {});
+        // 基础URL
+        const baseUrl = 'https://lycssb2778.github.io/';
+        
+        // ✅ 完全匹配你仓库中的实际文件名
+        const fileMapping = {
+            'title': '01_title.txt',
+            'sub': '02_sub.txt',
+            'meta': '03_meta.txt',
+            'highlight': '04_highlight.txt',
+            'sec1-title': '05_sec1.txt',  // 修正：不是 05_sec1_title.txt
+            'sec1-content': '05_sec1.txt', // 修正：复用同一个文件
+            'sec2-title': '06_sec2.txt',  // 修正：不是 06_sec2_title.txt
+            'sec2-content': '06_sec2.txt', // 修正：复用同一个文件
+            'quote': '07_quote.txt',
+            'end': '08_end.txt'
+        };
+        
+        // 加载文本内容的通用函数
+        async function loadTextContent() {
+            console.log('开始加载文本内容...');
+            
+            // 加载所有文件
+            const loadPromises = Object.entries(fileMapping).map(async ([elementId, fileName]) => {
+                const element = document.getElementById(elementId);
+                if (!element) {
+                    console.error(`元素不存在: ${elementId}`);
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(baseUrl + fileName);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status} - ${fileName}`);
+                    }
+                    const text = await response.text();
+                    element.textContent = text.trim();
+                    console.log(`✅ 成功加载: ${fileName}`);
+                } catch (error) {
+                    console.error(`❌ 加载失败: ${fileName}`, error);
+                    element.innerHTML = `<span class="error">加载 ${fileName} 失败: ${error.message}</span>`;
+                }
+            });
+            
+            await Promise.all(loadPromises);
+            console.log('=== 所有文本加载完成 ===');
+        }
+        
+        // 懒加载图片函数
+        function loadImage(imgId, imgUrl, altText) {
+            const img = document.getElementById(imgId);
+            const tempImg = new Image();
+            
+            tempImg.onload = function() {
+                img.src = baseUrl + imgUrl;
+                img.alt = altText;
+                img.classList.add('loaded');
+                console.log(`✅ 图片加载成功: ${imgUrl}`);
+            };
+            
+            tempImg.onerror = function() {
+                console.error(`❌ 图片加载失败: ${imgUrl}`);
+                img.style.display = 'none';
+                // 显示错误提示
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error';
+                errorDiv.textContent = `图片加载失败: ${imgUrl}`;
+                img.parentNode.insertBefore(errorDiv, img);
+            };
+            
+            tempImg.src = baseUrl + imgUrl;
+        }
+        
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('=== 页面初始化 ===');
+            
+            // 加载文本
+            loadTextContent();
+            
+            // 加载图片
+            loadImage('hero-img', 'img.png', '666少羽版');
+            loadImage('person-img', 'person.png', '少羽个人照');
+        });
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pornhu少羽版</title>
+    <link rel="icon" href="https://lycssb2778.github.io/icon.png" type="image/png">
+    <style>
+        :root {
+            --bg: #1a1a1a;
+            --panel: #2d2d2d;
+            --text: #e0e0e0;
+            --sub: #aaa;
+            --accent: #667eea;
+        }
+        body {
+            margin: 0;
+            font-family: "Microsoft YaHei", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.8;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--panel);
+            box-shadow: 0 0 20px rgba(0, 0, 0, .5);
+        }
+        .header {
+            background: linear-gradient(135deg, #3a3a3a 0%, var(--bg) 100%);
+            padding: 30px 20px;
+            text-align: center;
+            border-bottom: 2px solid #444;
+        }
+        .header h1 {
+            font-size: 28px;
+            margin: 0 0 10px;
+            min-height: 40px;
+        }
+        .header .subtitle {
+            font-size: 16px;
+            color: var(--sub);
+            min-height: 30px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .hero {
+            width: 100%;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .hero.loaded {
+            opacity: 1;
+        }
+        .person {
+            width: 180px;
+            border-radius: 10px;
+            margin: 20px auto;
+            display: block;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .person.loaded {
+            opacity: 1;
+        }
+        .meta {
+            text-align: center;
+            color: var(--sub);
+            font-size: 14px;
+            min-height: 25px;
+            margin-bottom: 20px;
+        }
+        .highlight {
+            background: linear-gradient(135deg, var(--accent) 0%, #764ba2 100%);
+            color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 18px;
+            min-height: 60px;
+            margin-bottom: 25px;
+        }
+        .section {
+            margin-bottom: 25px;
+        }
+        .section h2 {
+            border-left: 4px solid var(--accent);
+            padding-left: 15px;
+            margin-bottom: 15px;
+            font-size: 22px;
+            min-height: 35px;
+        }
+        .section p {
+            text-indent: 2em;
+            margin-bottom: 15px;
+            min-height: 30px;
+        }
+        .quote-box {
+            background: #3a3a3a;
+            border-left: 5px solid var(--accent);
+            padding: 25px;
+            border-radius: 10px;
+            font-style: italic;
+            text-align: center;
+            min-height: 80px;
+            margin-bottom: 25px;
+        }
+        .footer {
+            background: var(--bg);
+            color: var(--sub);
+            text-align: center;
+            padding: 20px;
+            font-size: 14px;
+            border-top: 2px solid #444;
+        }
+        .error {
+            background: rgba(255,107,107,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            color: #ffb8b8;
+            border-left: 4px solid #ff6b6b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 id="title">加载中...</h1>
+            <div class="subtitle" id="sub">加载中...</div>
+        </div>
+
+        <div class="content">
+            <img id="hero-img" src="" alt="666少羽版" class="hero">
+            <div class="meta" id="meta">加载中...</div>
+            <div class="highlight" id="highlight">加载中...</div>
+
+            <!-- 第一段内容 -->
+            <div class="section" id="sec1">
+                <h2 id="sec1-title">加载中...</h2>
+                <p id="sec1-content">加载中...</p>
+            </div>
+
+            <!-- 本人照插在第二段文字上方 -->
+            <div class="section" id="sec2">
+                <h2 id="sec2-title">加载中...</h2>
+                <img id="person-img" src="" alt="少羽" class="person">
+                <p id="sec2-content">加载中...</p>
+            </div>
+
+            <div class="quote-box" id="quote">加载中...</div>
+
+            <div class="highlight" id="end">加载中...</div>
+        </div>
+
+        <div class="footer">
+            少羽推广 | 深度报道<br>
+            © 2026 少羽娱乐资讯 版权所有
+        </div>
+    </div>
+
+    <script>
+        // 基础URL
+        const baseUrl = 'https://lycssb2778.github.io/';
+        
+        // ✅ 完全匹配你仓库中的实际文件名
+        const fileMapping = {
+            'title': '01_title.txt',
+            'sub': '02_sub.txt',
+            'meta': '03_meta.txt',
+            'highlight': '04_highlight.txt',
+            'sec1-title': '05_sec1.txt',  // 修正：不是 05_sec1_title.txt
+            'sec1-content': '05_sec1.txt', // 修正：复用同一个文件
+            'sec2-title': '06_sec2.txt',  // 修正：不是 06_sec2_title.txt
+            'sec2-content': '06_sec2.txt', // 修正：复用同一个文件
+            'quote': '07_quote.txt',
+            'end': '08_end.txt'
+        };
+        
+        // 加载文本内容的通用函数
+        async function loadTextContent() {
+            console.log('开始加载文本内容...');
+            
+            // 加载所有文件
+            const loadPromises = Object.entries(fileMapping).map(async ([elementId, fileName]) => {
+                const element = document.getElementById(elementId);
+                if (!element) {
+                    console.error(`元素不存在: ${elementId}`);
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(baseUrl + fileName);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status} - ${fileName}`);
+                    }
+                    const text = await response.text();
+                    element.textContent = text.trim();
+                    console.log(`✅ 成功加载: ${fileName}`);
+                } catch (error) {
+                    console.error(`❌ 加载失败: ${fileName}`, error);
+                    element.innerHTML = `<span class="error">加载 ${fileName} 失败: ${error.message}</span>`;
+                }
+            });
+            
+            await Promise.all(loadPromises);
+            console.log('=== 所有文本加载完成 ===');
+        }
+        
+        // 懒加载图片函数
+        function loadImage(imgId, imgUrl, altText) {
+            const img = document.getElementById(imgId);
+            const tempImg = new Image();
+            
+            tempImg.onload = function() {
+                img.src = baseUrl + imgUrl;
+                img.alt = altText;
+                img.classList.add('loaded');
+                console.log(`✅ 图片加载成功: ${imgUrl}`);
+            };
+            
+            tempImg.onerror = function() {
+                console.error(`❌ 图片加载失败: ${imgUrl}`);
+                img.style.display = 'none';
+                // 显示错误提示
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error';
+                errorDiv.textContent = `图片加载失败: ${imgUrl}`;
+                img.parentNode.insertBefore(errorDiv, img);
+            };
+            
+            tempImg.src = baseUrl + imgUrl;
+        }
+        
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('=== 页面初始化 ===');
+            
+            // 加载文本
+            loadTextContent();
+            
+            // 加载图片
+            loadImage('hero-img', 'img.png', '666少羽版');
+            loadImage('person-img', 'person.png', '少羽个人照');
         });
     </script>
 </body>
