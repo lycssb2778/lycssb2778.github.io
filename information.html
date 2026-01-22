@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>pornhub少羽版</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --bg: #1a1a1a;
+            --panel: #2d2d2d;
+            --text: #e0e0e0;
+            --sub: #aaa;
+            --accent: #667eea;
+        }
+        body {
+            margin: 0;
+            font-family: "Microsoft YaHei", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.8;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--panel);
+            box-shadow: 0 0 20px rgba(0, 0, 0, .5);
+        }
+        .header {
+            background: linear-gradient(135deg, #3a3a3a 0%, var(--bg) 100%);
+            padding: 30px 20px;
+            text-align: center;
+            border-bottom: 2px solid #444;
+        }
+        .header h1 {
+            font-size: 28px;
+            margin: 0 0 10px;
+        }
+        .header .subtitle {
+            font-size: 16px;
+            color: var(--sub);
+        }
+        .content {
+            padding: 30px;
+        }
+        .hero {
+            width: 100%;
+            border-radius: 10px;
+            margin-bottom: 25px;
+        }
+        .person {
+            width: 180px;
+            border-radius: 10px;
+            margin: 0 auto 20px;
+            display: block;
+        }
+        .meta, .highlight, .section, .quote-box {
+            margin-bottom: 25px;
+        }
+        .meta {
+            text-align: center;
+            color: var(--sub);
+            font-size: 14px;
+        }
+        .highlight {
+            background: linear-gradient(135deg, var(--accent) 0%, #764ba2 100%);
+            color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 18px;
+        }
+        .section h2 {
+            border-left: 4px solid var(--accent);
+            padding-left: 15px;
+            margin-bottom: 15px;
+            font-size: 22px;
+        }
+        .section p {
+            text-indent: 2em;
+            margin-bottom: 15px;
+        }
+        .quote-box {
+            background: #3a3a3a;
+            border-left: 5px solid var(--accent);
+            padding: 25px;
+            border-radius: 10px;
+            font-style: italic;
+            text-align: center;
+        }
+        .footer {
+            background: var(--bg);
+            color: var(--sub);
+            text-align: center;
+            padding: 20px;
+            font-size: 14px;
+            border-top: 2px solid #444;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 id="title"></h1>
+            <div class="subtitle" id="sub"></div>
+        </div>
+
+        <div class="content">
+            <img src="img.png" alt="666少羽版" class="hero">
+            <div class="meta" id="meta"></div>
+            <div class="highlight" id="highlight"></div>
+
+            <!-- 本人照插在第二段文字上方 -->
+            <div class="section" id="sec1">
+                <img src="person.png" alt="少羽" class="person">
+            </div>
+            <div class="section" id="sec2"></div>
+
+            <div class="quote-box" id="quote"></div>
+
+            <div class="section" id="sec3"></div>
+            <div class="highlight" id="end"></div>
+        </div>
+
+        <div class="footer">
+            少羽推广 | 深度报道<br>
+            © 2026 少羽娱乐资讯 版权所有
+        </div>
+    </div>
+
+    <script>
+        // 顺序读取同目录 01-08 txt
+        const list = ['title','sub','meta','highlight','sec1','sec2','quote','sec3','end'];
+        list.forEach((id, i) => {
+            const file = String(i+1).padStart(2,'0')+'_'+id+'.txt';
+            fetch(file)
+                .then(r => r.text())
+                .then(t => document.getElementById(id).innerHTML += t.replace(/\n/g,'<br>'))
+                .catch(() => {});
+        });
+    </script>
+</body>
+</html>

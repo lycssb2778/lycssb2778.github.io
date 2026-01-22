@@ -93,6 +93,12 @@
             img.src = imageUrl;
             img.classList.add('loaded');
             loading.style.display = 'none';
+            
+            // ✅ 添加点击图片跳转功能
+            img.style.cursor = 'pointer'; // 鼠标悬停显示手型
+            img.addEventListener('click', function() {
+                window.location.href = 'information.html';
+            });
         };
         
         tempImg.onerror = function() {
